@@ -6,10 +6,12 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dotenv import load_dotenv
 
 load_dotenv()
-
+from botocore.config import Config  
 from langgraph.types import Command, interrupt
+from langsmith import traceable
+from typing import Literal
 from langchain_aws import ChatBedrockConverse
-from langchain_core.messages import SystemMessage, AIMessage
+from langchain_core.messages import SystemMessage, HumanMessage
 from langgraph.graph import StateGraph, START, END
 from langchain.agents import create_agent
 
@@ -32,6 +34,7 @@ from tools import (
 )
 
 
+@traceable
 def get_llm(temperature: float = 0.3) -> ChatBedrockConverse:
     return ChatBedrockConverse(
         model=os.getenv(
@@ -40,6 +43,11 @@ def get_llm(temperature: float = 0.3) -> ChatBedrockConverse:
         region_name=os.getenv("BEDROCK_REGION", "us-east-1"),
         temperature=temperature,
         max_tokens=1024,
+        config=Config(                       # <-- ADD THIS BLOCK
+            connect_timeout=5,
+            read_timeout=20,
+            retries={"max_attempts": 1},
+        ),
     )
 
 
@@ -100,14 +108,17 @@ Rules:
 - user_id is always 'USER_#01'"""
 
 SUPERVISOR_PROMPT = """You are the supervisor of NutriMind, an AI nutrition assistant.
-Route the user's message to the correct specialist. Route once. Never do the work yourself.
+Route the user's message to exactly one specialist. Call exactly one. Never do the work yourself.
 
 - memory_agent          -> user wants to set up/update their profile, or view profile/meal history
 - nutrition_rag_agent   -> user asks a nutrition question, wants food data, or macro/calorie info
 - planning_agent        -> user wants a meal plan or to review goal progress
 - intake_agent          -> user wants to log a meal, see today's macros, or check running totals
 - insight_agent         -> user asks about health trends, streaks, or long-term patterns
-- FINISH                -> question is fully answered, no more agents needed"""
+- FINISH                -> question is fully answered, no more agents needed
+
+CRITICAL: If the last message in the conversation is already a response from a specialist
+(not a new question from the user), you MUST choose FINISH. Do NOT route again."""
 
 
 memory_agent = create_agent(
@@ -144,62 +155,67 @@ structured_output_supervisor = get_llm(temperature=0).with_structured_output(
     DecisionRouting
 )
 
-
-def supervisor_node(state: NutriState) -> Command:
+@traceable
+def supervisor_node(state: NutriState) -> Command[Literal["memory_agent",
+        "nutrition_rag_agent",
+        "planning_agent",
+        "intake_agent",
+        "insight_agent"]]:
     decision = structured_output_supervisor.invoke(
         [SystemMessage(content=SUPERVISOR_PROMPT)] + list(state["messages"])
     )
-    goto = decision.next
+    goto = decision.next_agent
     if goto == "FINISH":
-        return Command(goto=END)
-    return Command(update={"next": goto}, goto=goto)
-
-
-def memory_node(state: NutriState) -> Command:
-    result = memory_agent.invoke({"messages": state["messages"]})
-    last_message = result["messages"][-1].content
+        return Command(goto=END, update={"next_agent": 'FINISH'})
     return Command(
-        update={"messages": [AIMessage(content=last_message, name="memory_agent")]},
-        goto="supervisor",
-    )
-
-
-def nutrition_node(state: NutriState) -> Command:
-    result = nutrition_rag_agent.invoke({"messages": state["messages"]})
-    last_message = result["messages"][-1].content
-    return Command(
+        goto=decision.next_agent,
         update={
-            "messages": [AIMessage(content=last_message, name="nutrition_rag_agent")]
+            "messages": [HumanMessage(content=f"[Supervisor -> {decision.next_agent}]: {decision.task_description}")],
+            "next_agent": decision.next_agent,
         },
-        goto="supervisor",
     )
 
+@traceable
+def memory_node(state: NutriState) -> Command[Literal["supervisor"]]:
+    result = memory_agent.invoke({"messages": state["messages"]})
+    return Command(
+        update={"messages": result["messages"]},
+        goto="supervisor",
+    )
+    
+    
 
-def planning_node(state: NutriState) -> Command:
+@traceable
+def nutrition_node(state: NutriState) -> Command[Literal["supervisor"]]:
+    result = nutrition_rag_agent.invoke({"messages": state["messages"]})
+    return Command(
+        update={"messages": result["messages"]},
+            goto="supervisor"
+    )
+
+@traceable
+def planning_node(state: NutriState) -> Command[Literal["supervisor"]]:
     result = planning_agent.invoke({"messages": state["messages"]})
-    last_message = result["messages"][-1].content
     return Command(
-        update={"messages": [AIMessage(content=last_message, name="planning_agent")]},
+        update={"messages": result["messages"]},
         goto="supervisor",
     )
 
-
-def intake_node(state: NutriState) -> Command:
+@traceable
+def intake_node(state: NutriState) -> Command[Literal["supervisor"]]:
     result = intake_agent.invoke({"messages": state["messages"]})
-    last_message = result["messages"][-1].content
     return Command(
-        update={"messages": [AIMessage(content=last_message, name="intake_agent")]},
+        update={"messages": result["messages"]},
         goto="supervisor",
     )
 
-
-def insight_node(state: NutriState) -> Command:
+@traceable
+def insight_node(state: NutriState) -> Command[Literal["supervisor"]]:
     result = insight_agent.invoke({"messages": state["messages"]})
-    last_message = result["messages"][-1].content
-    if "medical_flag" in str(last_message).lower() or "1200" in str(last_message):
+    if "medical_flag" in str(result).lower() or "1200" in str(result):
         interrupt("Medical concern flagged. Awaiting human review.")
     return Command(
-        update={"messages": [AIMessage(content=last_message, name="insight_agent")]},
+        update={"messages": result["messages"]},
         goto="supervisor",
     )
 
@@ -221,4 +237,7 @@ except Exception as e:
     _checkpointer = None
     print(f"NOTE: No PostgreSQL connection ({e}). Running without persistent memory.")
 
-compiled = builder.compile(checkpointer=_checkpointer)
+compiled = builder.compile(
+    checkpointer=_checkpointer,
+    recursion_limit=10,
+)
