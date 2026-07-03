@@ -3,16 +3,13 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from typing import TypedDict, Sequence, Annotated
 from dotenv import load_dotenv
 
 load_dotenv()
 
 from langgraph.types import interrupt
 from langchain_aws import ChatBedrockConverse
-from langchain_core.messages import SystemMessage, HumanMessage, BaseMessage
-from langgraph.graph.message import add_messages
-from langgraph.graph import StateGraph, START, END
+from langchain_core.messages import SystemMessage, HumanMessage
 from langchain.agents import create_agent
 from langchain_core.tools import tool
 
@@ -32,10 +29,6 @@ from tools import (
     analyze_nutrition_patterns,
     track_streaks,
 )
-
-
-class NutriState(TypedDict):
-    messages: Annotated[Sequence[BaseMessage], add_messages]
 
 
 def get_llm(temperature: float = 0.3) -> ChatBedrockConverse:
@@ -186,7 +179,13 @@ def call_insight_agent(query: str) -> str:
     return last
 
 
-supervisor = create_agent(
+try:
+    _checkpointer = get_checkpointer()
+except Exception as e:
+    _checkpointer = None
+    print(f"NOTE: No PostgreSQL connection ({e}). Running without persistent memory.")
+
+compiled = create_agent(
     model=get_llm(temperature=0),
     tools=[
         call_memory_agent,
@@ -196,17 +195,5 @@ supervisor = create_agent(
         call_insight_agent,
     ],
     system_prompt=SUPERVISOR_PROMPT,
+    checkpointer=_checkpointer,
 )
-
-
-builder = StateGraph(NutriState)
-builder.add_node("supervisor", supervisor)
-builder.add_edge(START, "supervisor")
-builder.add_edge("supervisor", END)
-try:
-    _checkpointer = get_checkpointer()
-except Exception as e:
-    _checkpointer = None
-    print(f"NOTE: No PostgreSQL connection ({e}). Running without persistent memory.")
-
-compiled = builder.compile(checkpointer=_checkpointer)
