@@ -62,7 +62,7 @@ async def chat(request: ChatRequest, auth=Depends(verify_api_key)):
         )
 
         for m in reversed(result["messages"]):
-            if isinstance(m, AIMessage) and isinstance(m.content, str) and m.content.strip():
+            if isinstance(m.content, str) and m.content.strip():
                 return ChatResponse(response=m.content, thread_id=request.thread_id)
 
         return ChatResponse(
