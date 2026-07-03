@@ -237,7 +237,4 @@ except Exception as e:
     _checkpointer = None
     print(f"NOTE: No PostgreSQL connection ({e}). Running without persistent memory.")
 
-compiled = builder.compile(
-    checkpointer=_checkpointer,
-    recursion_limit=10,
-)
+compiled = builder.compile(checkpointer=_checkpointer)

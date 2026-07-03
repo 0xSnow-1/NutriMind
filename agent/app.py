@@ -4,7 +4,7 @@ import logging
 from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, AIMessage
 import uvicorn
 
 from agent.agent import compiled as nutrimind
@@ -55,14 +55,14 @@ def verify_api_key(x_api_key: str = Header(None)):
 @api.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest, auth=Depends(verify_api_key)):
     try:
-        config = {"configurable": {"thread_id": request.thread_id}}
+        config = {"configurable": {"thread_id": request.thread_id}, "recursion_limit": 10}
         result = nutrimind.invoke(
             {"messages": [HumanMessage(content=request.message)]},
             config=config,
         )
 
         for m in reversed(result["messages"]):
-            if isinstance(m.content, str) and m.content.strip():
+            if isinstance(m, AIMessage) and isinstance(m.content, str) and m.content.strip():
                 return ChatResponse(response=m.content, thread_id=request.thread_id)
 
         return ChatResponse(
