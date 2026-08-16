@@ -1,4 +1,4 @@
-# NutriMind 🥗
+# NutriMind 
 
 > Multi-agent AI nutrition assistant built with LangGraph — stateful memory, longitudinal health analysis, and human-in-the-loop medical flagging.
 
