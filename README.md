@@ -4,7 +4,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.12-blue)](https://python.org)
 [![LangGraph](https://img.shields.io/badge/LangGraph-1.2.6-green)](https://langchain-ai.github.io/langgraph/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.136-red)](https://fastapi.tiangolo.com)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.138-red)](https://fastapi.tiangolo.com)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)](https://postgresql.org)
 [![LangSmith](https://img.shields.io/badge/LangSmith-Traced-orange)](https://smith.langchain.com)
 [![AWS Bedrock](https://img.shields.io/badge/AWS-Bedrock-yellow)](https://aws.amazon.com/bedrock/)
@@ -13,7 +13,7 @@
 
 ## What Makes This Different
 
-Most nutrition chatbots are stateless wrappers around a single LLM call. NutriMind is a production-grade multi-agent system that:
+Most nutrition chatbots are stateless wrappers around a single LLM call. NutriMind is a working multi-agent prototype that:
 
 - **Remembers everything across sessions** — PostgreSQL-backed checkpointing via LangGraph's PostgresSaver
 - **Detects goal drift proactively** — compares your actual 7-day eating patterns against your stated goal before generating any meal plan
@@ -66,19 +66,19 @@ agent       rag_agent     agent        agent         agent
 
 | Tool | Pattern | Agent |
 |---|---|---|
-| `get_user_profile` | File I/O → PostgreSQL | memory_agent |
-| `upsert_user_profile` | State Mutation + PostgreSQL | memory_agent |
-| `get_meal_history` | File I/O → PostgreSQL | memory_agent |
+| `get_user_profile` | DB read (PostgreSQL) | memory_agent |
+| `upsert_user_profile` | DB write (PostgreSQL) | memory_agent |
+| `get_meal_history` | DB read (PostgreSQL) | memory_agent |
 | `search_nutrition_kb` | RAG Retrieval (FAISS) | nutrition_rag_agent |
 | `get_nutrition_info` | API Call (USDA) | nutrition_rag_agent |
 | `validate_against_rda` | Computation | nutrition_rag_agent |
-| `detect_goal_drift` | Computation + PostgreSQL | planning_agent |
+| `detect_goal_drift` | Computation + DB read (PostgreSQL) | planning_agent |
 | `score_meal_plan` | LLM-as-Judge Eval Gate | planning_agent |
-| `log_meal` | File I/O → PostgreSQL | intake_agent |
-| `get_running_macros` | Computation + PostgreSQL | intake_agent |
-| `detect_deficiencies` | Computation + PostgreSQL | intake_agent |
-| `analyze_nutrition_patterns` | Computation + PostgreSQL | insight_agent |
-| `track_streaks` | Computation + PostgreSQL | insight_agent |
+| `log_meal` | DB write (PostgreSQL) | intake_agent |
+| `get_running_macros` | Computation + DB read (PostgreSQL) | intake_agent |
+| `detect_deficiencies` | Computation + DB read (PostgreSQL) | intake_agent |
+| `analyze_nutrition_patterns` | Computation + DB read (PostgreSQL) | insight_agent |
+| `track_streaks` | Computation + DB read (PostgreSQL) | insight_agent |
 
 ---
 
@@ -113,8 +113,9 @@ NutriMind/
 │   └── data_loader.py    # Load PDF/TXT documents for indexing
 ├── data/                 # Nutrition knowledge base source documents
 ├── faiss_store/          # Persisted FAISS index and metadata
+├── my-chat-ui/           # TypeScript agent-frontend scaffold (see Frontend section)
 ├── tests/
-│   └── test_tools.py     # 16 unit tests (mocked DB/LLM)
+│   └── test_tools.py     # N unit tests (mocked DB/LLM)
 ├── streamlit_app.py      # Chat UI
 ├── docker-compose.yaml   # PostgreSQL local dev container
 ├── pyproject.toml        # Dependencies (uv)
@@ -137,7 +138,7 @@ NutriMind/
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/HarveyAGH/NutriMind.git
+git clone https://github.com/0xSnow-1/NutriMind.git
 cd NutriMind
 uv sync
 ```
@@ -233,6 +234,16 @@ curl -X POST http://localhost:8000/chat \
 
 ---
 
+## Frontend (my-chat-ui)
+
+`my-chat-ui/` is a TypeScript Turbo-monorepo scaffold (an `apps/agents` workspace containing the LangGraph quickstart agent templates — `memory-agent`, `react-agent`, `research-agent`, `retrieval-agent` — plus an `apps/web` app). It is an unmodified starter scaffold: its README is still the template's `# TODO: ADD README`, `package.json` still lists `"author": "Your Name"`, and nothing in it is wired to NutriMind's Python graph or API. The shipped UI is the Streamlit chat interface (`streamlit_app.py`). Treat `my-chat-ui/` as scratch unless a real frontend is built from it.
+
+## Limitations
+
+- **No automated eval suite yet.** The LLM-as-judge `score_meal_plan` gate scores each generated plan, but there is no golden-set benchmark or regression harness; the "Eval dataset — 20 golden meal plan Q&A pairs" item is still on the Future Work list below.
+- The medical-flagging thresholds (e.g. below 1200 kcal for 3+ consecutive days) and goal-drift heuristics are simple deterministic rules, not clinically validated logic.
+- This is a working prototype: the graph, memory, and tooling are exercised by unit tests, but there is no long-running production deployment and no load or reliability testing.
+
 ## Observability
 
 All traces visible in LangSmith under project `NutriMind_Nutritions`. Every supervisor routing decision, tool call, and agent response is tracked with latency and cost.
@@ -250,4 +261,4 @@ All traces visible in LangSmith under project `NutriMind_Nutritions`. Every supe
 
 ---
 
-Built by [Ahmed (Harvey)](https://github.com/HarveyAGH) — AI Agent Systems Engineer
+Built by [Ahmed Gamal](https://github.com/0xSnow-1) — AI Agent Systems Engineer

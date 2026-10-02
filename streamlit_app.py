@@ -152,7 +152,7 @@ with st.sidebar:
     st.divider()
 
     st.markdown(
-        "Built by [Ahmed (Harvey)](https://github.com/HarveyAGH) — AI Agent Systems Engineer"
+        "Built by [Ahmed Gamal](https://github.com/0xSnow-1) — AI Agent Systems Engineer"
     )
 
     if st.button("New conversation", use_container_width=True):
