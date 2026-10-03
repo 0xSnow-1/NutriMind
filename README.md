@@ -9,6 +9,11 @@
 [![LangSmith](https://img.shields.io/badge/LangSmith-Traced-orange)](https://smith.langchain.com)
 [![AWS Bedrock](https://img.shields.io/badge/AWS-Bedrock-yellow)](https://aws.amazon.com/bedrock/)
 
+> **Status:** working prototype, not production software.
+> **Verified:** 16/16 offline unit tests pass (`pytest tests/ -q`, mocked DB/LLM).
+> **Not yet built:** no automated eval suite or golden set (see [Limitations](#limitations)); `my-chat-ui/` is an unmodified scaffold (see [Frontend](#frontend-my-chat-ui)).
+> **Run it:** see [Setup](#setup) below.
+
 ---
 
 ## What Makes This Different
@@ -115,7 +120,7 @@ NutriMind/
 ├── faiss_store/          # Persisted FAISS index and metadata
 ├── my-chat-ui/           # TypeScript agent-frontend scaffold (see Frontend section)
 ├── tests/
-│   └── test_tools.py     # N unit tests (mocked DB/LLM)
+│   └── test_tools.py     # 16 unit tests (mocked DB/LLM; 12 functions, 4 parametrized)
 ├── streamlit_app.py      # Chat UI
 ├── docker-compose.yaml   # PostgreSQL local dev container
 ├── pyproject.toml        # Dependencies (uv)
