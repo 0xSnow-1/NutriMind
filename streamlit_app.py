@@ -2,6 +2,9 @@ import os
 import uuid
 import requests
 import streamlit as st
+from dotenv import load_dotenv
+
+load_dotenv()
 
 API_URL = os.getenv("NUTRIMIND_API_URL", "http://localhost:8000")
 API_KEY = os.getenv("API_KEY", "")
@@ -88,7 +91,7 @@ if "messages" not in st.session_state:
 
 st.title("NutriMind")
 st.markdown(
-    '<p class="description">Multi-agent AI nutrition assistant — stateful memory, longitudinal analysis, and human-in-the-loop medical flagging</p>',
+    '<p class="description">Multi-agent AI nutrition assistant - stateful memory, longitudinal analysis, and human-in-the-loop medical flagging</p>',
     unsafe_allow_html=True,
 )
 
@@ -137,11 +140,11 @@ with st.sidebar:
 
     st.markdown("### Agents")
     st.markdown(
-        "- **Memory Agent** — User profiles, meal history\n"
-        "- **Nutrition RAG Agent** — Evidence-based Q&A via FAISS + USDA\n"
-        "- **Planning Agent** — Adaptive meal plans, goal drift detection, LLM-as-judge eval\n"
-        "- **Intake Agent** — Meal logging, running macros, deficiency detection\n"
-        "- **Insight Agent** — 14-day pattern analysis, medical flagging, streak tracking"
+        "- **Memory Agent** - User profiles, meal history\n"
+        "- **Nutrition RAG Agent** - Evidence-based Q&A via FAISS + USDA\n"
+        "- **Planning Agent** - Adaptive meal plans, goal drift detection, LLM-as-judge eval\n"
+        "- **Intake Agent** - Meal logging, running macros, deficiency detection\n"
+        "- **Insight Agent** - 14-day pattern analysis, medical flagging, streak tracking"
     )
 
     st.divider()
@@ -152,7 +155,7 @@ with st.sidebar:
     st.divider()
 
     st.markdown(
-        "Built by [Ahmed Gamal](https://github.com/0xSnow-1) — AI Agent Systems Engineer"
+        "Built by [Ahmed Gamal](https://github.com/0xSnow-1) - AI Agent Systems Engineer"
     )
 
     if st.button("New conversation", use_container_width=True):

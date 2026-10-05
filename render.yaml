@@ -21,6 +21,8 @@ services:
         value: NutriMind_Nutritions
       - key: API_KEY
         sync: false
+      - key: USDA_FDC_API_KEY
+        sync: false
       # --- AGGRESSIVE MEMORY LIMITS ---
       - key: MALLOC_ARENA_MAX
         value: "2"
