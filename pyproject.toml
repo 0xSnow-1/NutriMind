@@ -1,7 +1,7 @@
 [project]
-name = "nutrimine"
+name = "nutrimind"
 version = "0.1.0"
-description = "Add your description here"
+description = "Multi-agent AI nutrition assistant built with LangGraph: PostgreSQL memory, LLM-as-judge eval gate, goal drift detection, and human-in-the-loop medical flagging"
 readme = "README.md"
 requires-python = ">=3.12,<3.14"
 dependencies = [
@@ -19,6 +19,7 @@ dependencies = [
     "npm>=0.1.1",
     "psycopg>=3.3.4",
     "pypdf>=6.14.2",
+    "python-dotenv>=1.0.0",
     "requests>=2.32.0",
     "sentence-transformers>=5.6.0",
     "streamlit>=1.40.0",

@@ -1583,7 +1583,7 @@ wheels = [
 ]
 
 [[package]]
-name = "nutrimine"
+name = "nutrimind"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
@@ -1601,6 +1601,7 @@ dependencies = [
     { name = "npm" },
     { name = "psycopg" },
     { name = "pypdf" },
+    { name = "python-dotenv" },
     { name = "requests" },
     { name = "sentence-transformers" },
     { name = "streamlit" },
@@ -1648,6 +1649,7 @@ requires-dist = [
     { name = "pypdf", specifier = ">=6.14.2" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0.0" },
     { name = "pytest-mock", marker = "extra == 'test'", specifier = ">=3.14.0" },
+    { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "requests", specifier = ">=2.32.0" },
     { name = "requests", marker = "extra == 'ui'", specifier = ">=2.32.0" },
     { name = "sentence-transformers", specifier = ">=5.6.0" },
