@@ -295,7 +295,7 @@ curl -X POST http://localhost:8000/chat \
 
 ## Frontend (my-chat-ui)
 
-`my-chat-ui/` is a TypeScript Turbo-monorepo scaffold (an `apps/agents` workspace containing the LangGraph quickstart agent templates - `memory-agent`, `react-agent`, `research-agent`, `retrieval-agent` - plus an `apps/web` app). It is an unmodified starter scaffold: its README is still the template's `# TODO: ADD README`, `package.json` still lists `"author": "Your Name"`, and nothing in it is wired to NutriMind's Python graph or API. The shipped UI is the Streamlit chat interface (`streamlit_app.py`). Treat `my-chat-ui/` as scratch unless a real frontend is built from it.
+`my-chat-ui/` is a TypeScript Turbo-monorepo scaffold (an `apps/agents` workspace containing the LangGraph quickstart agent templates - `memory-agent`, `react-agent`, `research-agent`, `retrieval-agent` - plus an `apps/web` app). It is an unmodified starter scaffold apart from the `package.json` author fields: its README is still the template's `# TODO: ADD README`, and nothing in it is wired to NutriMind's Python graph or API. The shipped UI is the Streamlit chat interface (`streamlit_app.py`). Treat `my-chat-ui/` as scratch unless a real frontend is built from it.
 
 ---
 
@@ -330,4 +330,6 @@ MIT. See [LICENSE](LICENSE) for the full text.
 
 ---
 
-Built by [Ahmed Gamal](https://github.com/0xSnow-1) - AI Agent Systems Engineer
+## Contact
+
+**Ahmed Gamal** · GitHub: [0xSnow-1](https://github.com/0xSnow-1) · X: [_0xSnowEth](https://x.com/_0xSnowEth) · LinkedIn: [in/ahmed-gamal-363b47307](https://www.linkedin.com/in/ahmed-gamal-363b47307) · Website: [0xsnow-1.github.io](https://0xsnow-1.github.io) · Email: [0xahmed.gamal@gmail.com](mailto:0xahmed.gamal@gmail.com)

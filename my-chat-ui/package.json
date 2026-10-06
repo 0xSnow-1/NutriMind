@@ -1,6 +1,6 @@
 {
   "name": "my-chat-ui",
-  "author": "Your Name",
+  "author": "Ahmed Gamal",
   "private": true,
   "workspaces": [
     "apps/*"
